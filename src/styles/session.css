@@ -1,0 +1,466 @@
+/* =========================================================================
+   Mode sesi: layar fokus, tasbih digital, activity ring.
+   ========================================================================= */
+
+.session {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 14px);
+}
+
+.session__topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  min-height: 40px;
+}
+
+.session__topbar-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  text-align: center;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--fill-quaternary);
+  color: var(--text-secondary);
+  transition: transform 0.16s var(--ease-out), background-color 0.2s var(--ease-out);
+}
+
+.icon-btn:active {
+  transform: scale(0.9);
+}
+
+.icon-btn svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* Progress paket: garis segmen tipis */
+.session__steps {
+  display: flex;
+  gap: 3px;
+  margin: 12px 2px 4px;
+  flex: none;
+}
+
+.session__step {
+  flex: 1;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--fill-tertiary);
+  overflow: hidden;
+}
+
+.session__step-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transform-origin: left;
+  transition: transform 0.4s var(--ease-out);
+}
+
+.session__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 14px 2px;
+}
+
+/* Pemusatan lewat auto-margin agar sisi atas tidak terpotong saat meluap. */
+.session__body > :first-child {
+  margin-top: auto;
+}
+
+.session__body > :last-child {
+  margin-bottom: auto;
+}
+
+.session__reading {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  /* Ruang bawah disisakan seluas dock agar akhir teks tidak tertutup. */
+  padding: 12px 2px calc(var(--dock-h, 150px) + 20px);
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Kartu pendek dipusatkan; kartu panjang tetap mulai dari atas karena
+   auto-margin menyusut jadi nol ketika ruang habis. */
+.session__reading > :first-child {
+  margin-top: auto;
+}
+
+.session__reading > :last-child {
+  margin-bottom: auto;
+}
+
+/* Seluruh area baca ikut jadi tombol tasbih: ibu jari bisa mengetuk
+   di mana saja sambil mata tetap membaca teks Arab. */
+.session__reading--tappable {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.session__dock {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--safe-bottom) + 12px);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-xl);
+  /* Dasar opaque supaya isi dock tetap terbaca di browser tanpa
+     backdrop-filter; efek kaca hanya dipakai bila didukung. */
+  background: var(--bg-elevated);
+  border: 1px solid var(--separator);
+  box-shadow: var(--shadow-raised);
+  max-width: calc(var(--page-max) - 24px);
+  margin: 0 auto;
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .session__dock {
+    background: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
+    backdrop-filter: saturate(180%) blur(22px);
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+  }
+
+  .session__hint span {
+    background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+  }
+}
+
+.session__dock-slot {
+  flex: 1 1 0;
+  display: flex;
+  min-width: 0;
+}
+
+.session__dock-slot--kanan {
+  justify-content: flex-end;
+}
+
+.session__dock--flat {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.session__dock-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.session__dock-meter {
+  width: 100%;
+}
+
+.session__dock-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Petunjuk singkat mengambang tepat di atas dock. Diberi latar pil agar
+   tetap terbaca ketika teks Arab yang panjang bergulir di belakangnya. */
+.session__hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--safe-bottom) + var(--dock-h, 150px) + 18px);
+  text-align: center;
+  pointer-events: none;
+  padding: 0 20px;
+  z-index: 4;
+}
+
+.session__hint span {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-card);
+  animation: fade-in 0.3s var(--ease-out) both;
+}
+
+.session__hint--accent span {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* -- Activity ring ------------------------------------------------------- */
+
+.ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.12s var(--ease-out);
+}
+
+.ring:active {
+  transform: scale(0.955);
+}
+
+.ring--bump {
+  animation: ring-bump 0.28s var(--ease-spring);
+}
+
+@keyframes ring-bump {
+  0% {
+    transform: scale(1);
+  }
+  38% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.ring__svg {
+  display: block;
+  transform: rotate(-90deg);
+}
+
+.ring__track {
+  fill: none;
+  stroke: var(--fill-tertiary);
+}
+
+.ring__progress {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.45s var(--ease-out);
+}
+
+.ring__glow {
+  fill: var(--card);
+}
+
+[data-theme='dark'] .ring__glow {
+  fill: var(--card);
+}
+
+.ring__content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.ring__count {
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.ring__target {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ring__hint {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-top: 4px;
+}
+
+.session__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex: none;
+  flex-wrap: wrap;
+}
+
+/* Kilau lembut saat target tercapai */
+.session--complete-flash::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 62%, var(--accent-soft), transparent 62%);
+  animation: flash 0.55s var(--ease-out) both;
+}
+
+@keyframes flash {
+  from {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* -- Layar selesai ------------------------------------------------------- */
+
+.finish {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 30px 8px 12px;
+}
+
+.finish__seal {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(160deg, var(--emerald-500), var(--emerald-700));
+  color: #fff;
+  box-shadow: var(--shadow-accent);
+  margin-bottom: 8px;
+  animation: seal-in 0.6s var(--ease-spring) both;
+}
+
+.finish__seal svg {
+  width: 44px;
+  height: 44px;
+}
+
+@keyframes seal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.finish__title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-top: 22px;
+}
+
+.summary-tile {
+  background: var(--card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 16px 10px;
+  text-align: center;
+}
+
+.summary-tile__value {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-strong);
+}
+
+[data-theme='dark'] .summary-tile__value {
+  color: var(--accent);
+}
+
+.summary-tile__label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 3px;
+}
+
+/* -- Statistik ----------------------------------------------------------- */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.stat-card {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+}
+
+.stat-card__value {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.stat-card__label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+@media (max-width: 380px) {
+  .ring__count {
+    font-size: 46px;
+  }
+}
